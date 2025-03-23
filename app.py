@@ -34,9 +34,26 @@ def index():
             # Combina as imagens
             combined = Image.alpha_composite(user_image, overlay)
 
-            # Adiciona o texto
-            draw = ImageDraw.Draw(combined)
-            font = ImageFont.load_default()
+            # Tenta usar uma fonte maior e em negrito (ou padrão se não houver)
+	    # Tenta usar uma fonte maior e em negrito (ou padrão se não houver)
+try:
+    font = ImageFont.truetype("DejaVuSans-Bold.ttf", 36)
+except:
+    font = ImageFont.load_default()
+
+# Texto combinado
+texto = f"{nome} - {cidade}"
+
+# Medindo o texto para centralizar ou alinhar
+text_width, text_height = draw.textsize(texto, font=font)
+
+# Posição: 30px da base e 30px da esquerda
+x = 30
+y = user_image.height - text_height - 30
+
+draw.text((x, y), texto, font=font, fill="white")
+
+
 
             # Exemplo de posicionamento do texto
             draw.text((30, 450), f"Nome: {nome}", font=font, fill="white")
