@@ -1,21 +1,62 @@
-# Adiciona o texto
-draw = ImageDraw.Draw(combined)
+from flask import Flask, request, render_template, send_file
+from PIL import Image, ImageDraw, ImageFont
+import os
+import uuid
 
-# Tenta usar uma fonte maior e em negrito (se disponível no Render)
-try:
-    font = ImageFont.truetype("DejaVuSans-Bold.ttf", 36)
-except:
-    font = ImageFont.load_default()
+app = Flask(__name__)
+UPLOAD_FOLDER = 'static/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Texto combinado
-texto = f"{nome} - {cidade}"
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        cidade = request.form.get('cidade')
+        file = request.files.get('imagem')
 
-# Medir largura/altura do texto
-text_width, text_height = draw.textsize(texto, font=font)
+        if file:
+            # Salvar a imagem original enviada pelo usuário
+            filename = f"{uuid.uuid4().hex}.png"
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(filepath)
 
-# Posição: parte de baixo da imagem com margem de 30px
-x = 30  # ou centralizado: (combined.width - text_width) // 2
-y = combined.height - text_height - 30
+            # Abrir e preparar a imagem
+            user_image = Image.open(filepath).convert("RGBA")
+            user_image = user_image.resize((856, 540))
 
-# Desenhar o texto
-draw.text((x, y), texto, font=font, fill="white")
+            # Abrir e redimensionar o overlay
+            overlay = Image.open('static/overlay.png').convert("RGBA")
+            overlay = overlay.resize((856, 540))
+
+            # Combinar imagens
+            combined = Image.alpha_composite(user_image, overlay)
+
+            # Preparar desenho
+            draw = ImageDraw.Draw(combined)
+
+            # Tentar usar fonte negrito, senão usar padrão
+            try:
+                font = ImageFont.truetype("DejaVuSans-Bold.ttf", 36)
+            except:
+                font = ImageFont.load_default()
+
+            # Texto a desenhar
+            texto = f"{nome} - {cidade}"
+            text_width, text_height = draw.textsize(texto, font=font)
+
+            # Posicionar na parte inferior
+            x = 30
+            y = combined.height - text_height - 30
+            draw.text((x, y), texto, font=font, fill="white")
+
+            # Salvar imagem final
+            result_path = os.path.join(UPLOAD_FOLDER, f"final_{filename}")
+            combined.save(result_path)
+
+            return send_file(result_path, as_attachment=True)
+
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
