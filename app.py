@@ -36,7 +36,7 @@ def index():
 
             # Adiciona o texto
             draw = ImageDraw.Draw(combined)
-            font = ImageFont.truetype("arial.ttf", 30)
+            font = ImageFont.load_default()
 
             # Exemplo de posicionamento do texto
             draw.text((30, 450), f"Nome: {nome}", font=font, fill="white")
