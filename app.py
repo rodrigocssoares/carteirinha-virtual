@@ -34,7 +34,7 @@ def index():
             # Preparar desenho
             draw = ImageDraw.Draw(combined)
 
-            # Tentar usar fonte negrito, senão usar padrão
+            # Tentar usar fonte negrito, senão padrão
             try:
                 font = ImageFont.truetype("DejaVuSans-Bold.ttf", 36)
             except:
@@ -42,11 +42,16 @@ def index():
 
             # Texto a desenhar
             texto = f"{nome} - {cidade}"
-            text_width, text_height = draw.textsize(texto, font=font)
 
-            # Posicionar na parte inferior
+            # Medir largura e altura com textbbox (Pillow 8.0+)
+            bbox = draw.textbbox((0, 0), texto, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+
+            # Posição: parte inferior com margem
             x = 30
             y = combined.height - text_height - 30
+
             draw.text((x, y), texto, font=font, fill="white")
 
             # Salvar imagem final
