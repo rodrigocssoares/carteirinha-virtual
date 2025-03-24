@@ -10,7 +10,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route('/', methods=['GET', 'POST'])
 def index():
     image_url = None
-    download = False
     atleta = cidade = pico = categoria = cor = ""
     filename = None
 
@@ -72,26 +71,26 @@ def index():
 
         if acao == "salvar":
             final_filename = f"final_{filename}"
-            download = True
+            result_path = os.path.join(UPLOAD_FOLDER, final_filename)
+            combined.save(result_path)
+            return send_from_directory(UPLOAD_FOLDER, final_filename, as_attachment=True)
+
         else:
             final_filename = f"preview_{filename}"
+            result_path = os.path.join(UPLOAD_FOLDER, final_filename)
+            combined.save(result_path)
+            image_url = f"/{UPLOAD_FOLDER}/{final_filename}"
 
-        result_path = os.path.join(UPLOAD_FOLDER, final_filename)
-        combined.save(result_path)
-
-        image_url = f"/{UPLOAD_FOLDER}/{final_filename}"
-
-        return render_template(
-            'index.html',
-            image_url=image_url,
-            image_original=filename,
-            download=download,
-            atleta=atleta,
-            cidade=cidade,
-            pico=pico,
-            categoria=categoria,
-            cor=cor
-        )
+            return render_template(
+                'index.html',
+                image_url=image_url,
+                image_original=filename,
+                atleta=atleta,
+                cidade=cidade,
+                pico=pico,
+                categoria=categoria,
+                cor=cor
+            )
 
     return render_template('index.html')
 
