@@ -1,4 +1,4 @@
-rom flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory
 from PIL import Image, ImageDraw, ImageFont
 import os
 import uuid
