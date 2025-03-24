@@ -1,52 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Carteirinha Virtual</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carteirinha Virtual</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      background: linear-gradient(to bottom, #fdf6e3, #e0f7fa);
+      margin: 0;
+      padding: 20px;
+      color: #003b46;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    input[type="text"], input[type="color"], input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .buttons {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      flex: 1;
+      background-color: #0077cc;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    .preview-container {
+      text-align: center;
+    }
+    .preview-container h3 {
+      margin-bottom: 10px;
+    }
+    .preview {
+      border-radius: 12px;
+      border: 2px solid #ccc;
+      padding: 10px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    img.preview-image {
+      width: 100%;
+      border-radius: 10px;
+    }
+    @media(max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h2>Gerador de Carteirinha Virtual</h2>
+  <h1>Gerador de Carteirinha Virtual</h1>
+  <div class="container">
+    <form class="card" action="/preview" method="post" enctype="multipart/form-data">
+      <label for="nome">Atleta:</label>
+      <input type="text" name="nome" id="nome">
 
-    <form method="POST" enctype="multipart/form-data">
-        <label for="atleta">Atleta:</label><br>
-        <input type="text" id="atleta" name="atleta" value="{{ atleta or '' }}" required><br><br>
+      <label for="cidade">Cidade:</label>
+      <input type="text" name="cidade" id="cidade">
 
-        <label for="cidade">Cidade:</label><br>
-        <input type="text" id="cidade" name="cidade" value="{{ cidade or '' }}" required><br><br>
+      <label for="pico">Pico:</label>
+      <input type="text" name="pico" id="pico">
 
-        <label for="pico">Pico:</label><br>
-        <input type="text" id="pico" name="pico" value="{{ pico or '' }}" required><br><br>
+      <label for="categoria">Categoria:</label>
+      <input type="text" name="categoria" id="categoria">
 
-        <label for="categoria">Categoria:</label><br>
-        <input type="text" id="categoria" name="categoria" value="{{ categoria or '' }}" required><br><br>
+      <label for="cor">Cor do texto:</label>
+      <input type="color" name="cor" id="cor" value="#ffffff">
 
-        <label for="cor">Cor do texto:</label><br>
-        <input type="color" id="cor" name="cor" value="{{ cor or '#ffffff' }}"><br><br>
+      <label for="imagem">Imagem do cartão (proporção 856 x 540):</label>
+      <input type="file" name="imagem" id="imagem">
 
-        <label for="imagem">Imagem do cartão (proporção 856 x 540):</label><br>
-        <input type="file" id="imagem" name="imagem" accept="image/*"><br><br>
-
-        {% if image_original %}
-            <input type="hidden" name="imagem_original" value="{{ image_original }}">
-        {% endif %}
-
-        <button type="submit" name="acao" value="preview">👁 Visualizar</button>
-        <button type="submit" name="acao" value="salvar">📥 Baixar Carteirinha</button>
+      <div class="buttons">
+        <button type="submit" formaction="/preview">Visualizar</button>
+        <button type="submit" formaction="/gerar">Baixar Carteirinha</button>
+      </div>
     </form>
 
-    {% if erro %}
-        <p style="color: red;">{{ erro }}</p>
+    {% if imagem_base64 %}
+    <div class="card preview-container">
+      <h3>Carteirinha Gerada:</h3>
+      <div class="preview">
+        <img class="preview-image" src="data:image/png;base64,{{ imagem_base64 }}" alt="Carteirinha">
+      </div>
+    </div>
     {% endif %}
-
-    {% if image_url %}
-        <hr>
-        <h3>Carteirinha Gerada:</h3>
-        <img src="{{ image_url }}" alt="Carteirinha gerada" style="max-width:100%; height:auto; border:1px solid #ccc; padding:10px;">
-        <br><br>
-        {% if download %}
-            <a href="{{ image_url }}" download>📥 Clique aqui para baixar sua carteirinha</a>
-        {% endif %}
-    {% endif %}
+  </div>
 </body>
 </html>
 
