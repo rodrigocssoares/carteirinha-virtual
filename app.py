@@ -1,49 +1,64 @@
-import os
-import uuid
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_file, redirect, url_for
 from PIL import Image, ImageDraw, ImageFont
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['GENERATED_FOLDER'] = 'static/generated'
 
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['GENERATED_FOLDER'], exist_ok=True)
+UPLOAD_FOLDER = 'static/uploads'
+RESULT_FOLDER = 'static/results'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['RESULT_FOLDER'] = RESULT_FOLDER
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(RESULT_FOLDER, exist_ok=True)
+
+def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_filename):
+    base = Image.open(img_path).convert("RGBA")
+    draw = ImageDraw.Draw(base)
+
+    font = ImageFont.load_default()
+
+    texto = f"Atleta: {nome}\nCidade: {cidade}\nPico: {pico}\nCategoria: {categoria}"
+
+    draw.text((20, base.height - 100), texto, fill=cor_texto, font=font)
+
+    result_path = os.path.join(app.config['RESULT_FOLDER'], result_filename)
+    base.save(result_path)
+    return result_path
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    image_url = None
     if request.method == 'POST':
-        nome = request.form.get('nome')
-        cidade = request.form.get('cidade')
-        pico = request.form.get('pico')
-        categoria = request.form.get('categoria')
-        cor = request.form.get('cor') or "#FFFFFF"
-        imagem = request.files.get('imagem')
+        nome = request.form.get('nome', '')
+        cidade = request.form.get('cidade', '')
+        pico = request.form.get('pico', '')
+        categoria = request.form.get('categoria', '')
+        cor_texto = request.form.get('cor', '#FFFFFF')
+        acao = request.form.get('acao')
 
-        if imagem and nome and cidade:
-            temp_filename = f"{uuid.uuid4().hex}.png"
-            input_path = os.path.join(app.config['UPLOAD_FOLDER'], temp_filename)
-            output_path = os.path.join(app.config['GENERATED_FOLDER'], temp_filename)
-            imagem.save(input_path)
+        if 'imagem' in request.files:
+            imagem = request.files['imagem']
+            if imagem and imagem.filename != '':
+                filename = secure_filename(imagem.filename)
+                img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                imagem.save(img_path)
+                request.environ['img_path'] = img_path
+            else:
+                img_path = request.environ.get('img_path', '')
+        else:
+            img_path = request.environ.get('img_path', '')
 
-            overlay = Image.open("static/overlay.png").convert("RGBA")
-            base = Image.open(input_path).convert("RGBA")
-            base = base.resize(overlay.size)
+        if img_path:
+            result_filename = f"final_{secure_filename(nome)}.png"
+            result_path = generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_filename)
 
-            combined = Image.alpha_composite(base, overlay)
+            if acao == 'visualizar':
+                return render_template('index.html', nome=nome, cidade=cidade, pico=pico, categoria=categoria, cor=cor_texto, imagem_gerada=result_path)
+            elif acao == 'baixar':
+                return send_file(result_path, as_attachment=True)
 
-            draw = ImageDraw.Draw(combined)
-            font = ImageFont.truetype("arial.ttf", 30)
+    return render_template('index.html')
 
-            texto = f"Atleta: {nome}\nCidade: {cidade}\nPico: {pico}\nCategoria: {categoria}"
-            draw.text((30, 390), texto, font=font, fill=cor)
-
-            combined.save(output_path)
-            image_url = output_path
-
-    return render_template("index.html", image_url=image_url)
-
-@app.route('/download/<filename>')
-def download(filename):
-    return send_from_directory(app.config['GENERATED_FOLDER'], filename, as_attachment=True)
+if __name__ == '__main__':
+    app.run(debug=True)
