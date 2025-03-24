@@ -12,7 +12,7 @@ def index():
     image_url = None
 
     if request.method == 'POST':
-        nome = request.form.get('nome')
+        atleta = request.form.get('atleta')
         cidade = request.form.get('cidade')
         pico = request.form.get('pico')
         categoria = request.form.get('categoria')
@@ -34,7 +34,7 @@ def index():
                 font = ImageFont.load_default()
 
             linhas = [
-                f"Nome: {nome}",
+                f"Atleta: {atleta}",
                 f"Cidade: {cidade}",
                 f"Pico: {pico}",
                 f"Categoria: {categoria}"
