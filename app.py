@@ -1,64 +1,99 @@
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, send_from_directory
 from PIL import Image, ImageDraw, ImageFont
 import os
 import uuid
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-
 UPLOAD_FOLDER = 'static/uploads'
-RESULT_FOLDER = 'static/results'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['RESULT_FOLDER'] = RESULT_FOLDER
-
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(RESULT_FOLDER, exist_ok=True)
-
-def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_filename):
-    base = Image.open(img_path).convert("RGBA")
-    draw = ImageDraw.Draw(base)
-
-    font = ImageFont.load_default()
-
-    # Limita o tamanho dos campos para evitar estouro visual
-    nome = nome[:30]
-    cidade = cidade[:30]
-    pico = pico[:30]
-    categoria = categoria[:30]
-
-    texto = f"Atleta: {nome}\nCidade: {cidade}\nPico: {pico}\nCategoria: {categoria}"
-    draw.text((20, base.height - 100), texto, fill=cor_texto, font=font)
-
-    result_path = os.path.join(app.config['RESULT_FOLDER'], result_filename)
-    base.save(result_path)
-    return result_path
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    image_url = None
+    atleta = cidade = pico = categoria = cor = ""
+    filename = None
+
     if request.method == 'POST':
-        nome = request.form.get('nome', '')
-        cidade = request.form.get('cidade', '')
-        pico = request.form.get('pico', '')
-        categoria = request.form.get('categoria', '')
-        cor_texto = request.form.get('cor', '#FFFFFF')
+        atleta = request.form.get('atleta')
+        cidade = request.form.get('cidade')
+        pico = request.form.get('pico')
+        categoria = request.form.get('categoria')
+        cor = request.form.get('cor') or "#ffffff"
         acao = request.form.get('acao')
+        imagem_original = request.form.get('imagem_original')
+        file = request.files.get('imagem')
 
-        imagem = request.files.get('imagem')
-        if imagem and imagem.filename != '':
-            filename = f"{uuid.uuid4().hex}_{secure_filename(imagem.filename)}"
-            img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            imagem.save(img_path)
+        if file and file.filename != "":
+            filename = f"{uuid.uuid4().hex}.png"
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(filepath)
+        elif imagem_original:
+            filename = imagem_original
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
         else:
-            return render_template('index.html', erro="Por favor, envie uma imagem.")
+            return render_template(
+                'index.html',
+                erro="Por favor, envie uma imagem para continuar.",
+                atleta=atleta,
+                cidade=cidade,
+                pico=pico,
+                categoria=categoria,
+                cor=cor
+            )
 
-        result_filename = f"final_{uuid.uuid4().hex}.png"
-        result_path = generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_filename)
+        user_image = Image.open(filepath).convert("RGBA").resize((856, 540))
+        overlay = Image.open('static/overlay.png').convert("RGBA").resize((856, 540))
+        combined = Image.alpha_composite(user_image, overlay)
+        draw = ImageDraw.Draw(combined)
 
-        if acao == 'visualizar':
-            return render_template('index.html',
-                                   nome=nome, cidade=cidade, pico=pico, categoria=categoria,
-                                   cor=cor_texto, imagem_gerada=result_path)
-        elif acao == 'baixar':
-            return send_file(result_path, as_attachment=True)
+        try:
+            font = ImageFont.truetype("DejaVuSans-Bold.ttf", 28)
+        except:
+            font = ImageFont.load_default()
+
+        linhas = [
+            f"Atleta: {atleta}",
+            f"Cidade: {cidade}",
+            f"Pico: {pico}",
+            f"Categoria: {categoria}"
+        ]
+
+        margem = 30
+        espaco = 8
+        total_altura = sum([draw.textbbox((0, 0), linha, font=font)[3] for linha in linhas]) + (len(linhas) - 1) * espaco
+        y = combined.height - total_altura - margem
+
+        for linha in linhas:
+            bbox = draw.textbbox((0, 0), linha, font=font)
+            text_height = bbox[3] - bbox[1]
+            draw.text((30, y), linha, font=font, fill=cor)
+            y += text_height + espaco
+
+        if acao == "salvar":
+            final_filename = f"final_{filename}"
+            result_path = os.path.join(UPLOAD_FOLDER, final_filename)
+            combined.save(result_path)
+            return send_from_directory(UPLOAD_FOLDER, final_filename, as_attachment=True)
+
+        else:
+            final_filename = f"preview_{filename}"
+            result_path = os.path.join(UPLOAD_FOLDER, final_filename)
+            combined.save(result_path)
+            image_url = f"/{UPLOAD_FOLDER}/{final_filename}"
+
+            return render_template(
+                'index.html',
+                image_url=image_url,
+                image_original=filename,
+                atleta=atleta,
+                cidade=cidade,
+                pico=pico,
+                categoria=categoria,
+                cor=cor
+            )
 
     return render_template('index.html')
+
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
