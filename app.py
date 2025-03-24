@@ -9,19 +9,19 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    image_url = None
-    atleta = cidade = pico = categoria = cor = ""
+    card_url = None
+    name = city = pico = categoria = color = ""
     filename = None
 
     if request.method == 'POST':
-        atleta = request.form.get('atleta')
-        cidade = request.form.get('cidade')
-        pico = request.form.get('pico')
-        categoria = request.form.get('categoria')
-        cor = request.form.get('cor') or "#ffffff"
-        acao = request.form.get('acao')
+        name = request.form.get('name', '')
+        city = request.form.get('city', '')
+        pico = request.form.get('pico', '')
+        categoria = request.form.get('categoria', '')
+        color = request.form.get('color', '#ffffff')
+        action = request.form.get('action')
         imagem_original = request.form.get('imagem_original')
-        file = request.files.get('imagem')
+        file = request.files.get('image')
 
         if file and file.filename != "":
             filename = f"{uuid.uuid4().hex}.png"
@@ -33,12 +33,14 @@ def index():
         else:
             return render_template(
                 'index.html',
-                erro="Por favor, envie uma imagem para continuar.",
-                atleta=atleta,
-                cidade=cidade,
+                name=name,
+                city=city,
                 pico=pico,
                 categoria=categoria,
-                cor=cor
+                color=color,
+                card_url=None,
+                imagem_original="",
+                erro="Por favor, envie uma imagem."
             )
 
         user_image = Image.open(filepath).convert("RGBA").resize((856, 540))
@@ -52,8 +54,8 @@ def index():
             font = ImageFont.load_default()
 
         linhas = [
-            f"Atleta: {atleta}",
-            f"Cidade: {cidade}",
+            f"Atleta: {name}",
+            f"Cidade: {city}",
             f"Pico: {pico}",
             f"Categoria: {categoria}"
         ]
@@ -66,37 +68,31 @@ def index():
         for linha in linhas:
             bbox = draw.textbbox((0, 0), linha, font=font)
             text_height = bbox[3] - bbox[1]
-            draw.text((30, y), linha, font=font, fill=cor)
+            draw.text((30, y), linha, font=font, fill=color)
             y += text_height + espaco
 
-        if acao == "salvar":
+        if action == "download":
             final_filename = f"final_{filename}"
             result_path = os.path.join(UPLOAD_FOLDER, final_filename)
             combined.save(result_path)
             return send_from_directory(UPLOAD_FOLDER, final_filename, as_attachment=True)
-
         else:
-            final_filename = f"preview_{filename}"
-            result_path = os.path.join(UPLOAD_FOLDER, final_filename)
+            preview_filename = f"preview_{filename}"
+            result_path = os.path.join(UPLOAD_FOLDER, preview_filename)
             combined.save(result_path)
-            image_url = f"/{UPLOAD_FOLDER}/{final_filename}"
+            card_url = f"/{UPLOAD_FOLDER}/{preview_filename}"
 
-            return render_template(
-                'index.html',
-                image_url=image_url,
-                image_original=filename,
-                atleta=atleta,
-                cidade=cidade,
-                pico=pico,
-                categoria=categoria,
-                cor=cor
-            )
-
-    return render_template('index.html')
+    return render_template(
+        'index.html',
+        name=name,
+        city=city,
+        pico=pico,
+        categoria=categoria,
+        color=color,
+        imagem_original=filename,
+        card_url=card_url
+    )
 
 @app.route('/static/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
-
-
-
