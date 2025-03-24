@@ -11,6 +11,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def index():
     image_url = None
     download = False
+    atleta = cidade = pico = categoria = cor = ""
 
     if request.method == 'POST':
         atleta = request.form.get('atleta')
@@ -65,8 +66,10 @@ def index():
 
             image_url = f"/{UPLOAD_FOLDER}/{final_filename}"
 
-    return render_template('index.html', image_url=image_url, download=download)
-
-@app.route('/static/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
+    return render_template(
+        'index.html',
+        image_url=image_url,
+        download=download,
+        atleta=atleta,
+        cidade=cidade,
+        pico=pico,

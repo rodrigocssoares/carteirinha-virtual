@@ -9,25 +9,25 @@
 
     <form method="POST" enctype="multipart/form-data">
         <label for="atleta">Atleta:</label><br>
-        <input type="text" id="atleta" name="atleta" required><br><br>
+        <input type="text" id="atleta" name="atleta" value="{{ atleta or '' }}" required><br><br>
 
         <label for="cidade">Cidade:</label><br>
-        <input type="text" id="cidade" name="cidade" required><br><br>
+        <input type="text" id="cidade" name="cidade" value="{{ cidade or '' }}" required><br><br>
 
         <label for="pico">Pico:</label><br>
-        <input type="text" id="pico" name="pico" required><br><br>
+        <input type="text" id="pico" name="pico" value="{{ pico or '' }}" required><br><br>
 
         <label for="categoria">Categoria:</label><br>
-        <input type="text" id="categoria" name="categoria" required><br><br>
+        <input type="text" id="categoria" name="categoria" value="{{ categoria or '' }}" required><br><br>
 
         <label for="cor">Cor do texto:</label><br>
-        <input type="color" id="cor" name="cor" value="#ffffff"><br><br>
+        <input type="color" id="cor" name="cor" value="{{ cor or '#ffffff' }}"><br><br>
 
         <label for="imagem">Imagem do cartão (proporção cartão de crédito 856 x 540):</label><br>
         <input type="file" id="imagem" name="imagem" accept="image/*" required><br><br>
 
         <button type="submit" name="acao" value="preview">👁 Visualizar</button>
-        <button type="submit" name="acao" value="salvar">💾 Salvar Carteirinha</button>
+        <button type="submit" name="acao" value="salvar">📥 Baixar Carteirinha</button>
     </form>
 
     {% if image_url %}
@@ -36,7 +36,7 @@
         <img src="{{ image_url }}" alt="Carteirinha gerada" style="max-width:100%; height:auto; border:1px solid #ccc; padding:10px;">
         <br><br>
         {% if download %}
-            <a href="{{ image_url }}" download>📥 Baixar imagem</a>
+            <a href="{{ image_url }}" download>📥 Clique aqui para baixar sua carteirinha</a>
         {% endif %}
     {% endif %}
 </body>
