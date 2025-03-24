@@ -10,12 +10,15 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route('/', methods=['GET', 'POST'])
 def index():
     image_url = None
+    download = False
 
     if request.method == 'POST':
         atleta = request.form.get('atleta')
         cidade = request.form.get('cidade')
         pico = request.form.get('pico')
         categoria = request.form.get('categoria')
+        cor = request.form.get('cor') or "#ffffff"
+        acao = request.form.get('acao')
         file = request.files.get('imagem')
 
         if file:
@@ -48,16 +51,21 @@ def index():
             for linha in linhas:
                 bbox = draw.textbbox((0, 0), linha, font=font)
                 text_height = bbox[3] - bbox[1]
-                draw.text((30, y), linha, font=font, fill="white")
+                draw.text((30, y), linha, font=font, fill=cor)
                 y += text_height + espaco
 
-            final_filename = f"final_{filename}"
+            if acao == "salvar":
+                final_filename = f"final_{filename}"
+                download = True
+            else:
+                final_filename = f"preview_{filename}"
+
             result_path = os.path.join(UPLOAD_FOLDER, final_filename)
             combined.save(result_path)
 
             image_url = f"/{UPLOAD_FOLDER}/{final_filename}"
 
-    return render_template('index.html', image_url=image_url)
+    return render_template('index.html', image_url=image_url, download=download)
 
 @app.route('/static/uploads/<filename>')
 def uploaded_file(filename):

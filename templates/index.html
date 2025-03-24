@@ -20,10 +20,14 @@
         <label for="categoria">Categoria:</label><br>
         <input type="text" id="categoria" name="categoria" required><br><br>
 
+        <label for="cor">Cor do texto:</label><br>
+        <input type="color" id="cor" name="cor" value="#ffffff"><br><br>
+
         <label for="imagem">Imagem do cartão (proporção cartão de crédito 856 x 540):</label><br>
         <input type="file" id="imagem" name="imagem" accept="image/*" required><br><br>
 
-        <button type="submit">Gerar Carteirinha</button>
+        <button type="submit" name="acao" value="preview">👁 Visualizar</button>
+        <button type="submit" name="acao" value="salvar">💾 Salvar Carteirinha</button>
     </form>
 
     {% if image_url %}
@@ -31,7 +35,9 @@
         <h3>Carteirinha Gerada:</h3>
         <img src="{{ image_url }}" alt="Carteirinha gerada" style="max-width:100%; height:auto; border:1px solid #ccc; padding:10px;">
         <br><br>
-        <a href="{{ image_url }}" download>📥 Baixar imagem</a>
+        {% if download %}
+            <a href="{{ image_url }}" download>📥 Baixar imagem</a>
+        {% endif %}
     {% endif %}
 </body>
 </html>
