@@ -1,29 +1,27 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerador de Carteirinha Virtual</title>
+    <title>Carteirinha Virtual</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom right, #fffde4, #d7fbd7);
+            background: linear-gradient(to bottom right, #fffbe6, #d6f5e3);
             margin: 0;
-            padding: 0;
+            padding: 30px;
         }
         .container {
             display: flex;
-            justify-content: center;
-            padding: 40px;
+            gap: 30px;
+            max-width: 1200px;
+            margin: auto;
         }
-        .form-container, .preview-container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            margin: 0 20px;
+        .form-box, .preview-box {
             flex: 1;
-            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px #ccc;
         }
         h1 {
             text-align: center;
@@ -31,78 +29,71 @@
         }
         label {
             font-weight: bold;
-            display: block;
-            margin-top: 15px;
         }
-        input[type="text"], input[type="file"], input[type="color"] {
+        input, select, button {
+            display: block;
+            margin-bottom: 15px;
+            padding: 8px;
             width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            box-sizing: border-box;
             border-radius: 5px;
             border: 1px solid #ccc;
         }
-        input[type="color"] {
+        .color-input {
             height: 40px;
-            cursor: pointer;
-        }
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
+            padding: 0;
         }
         button {
-            padding: 10px 20px;
+            background: #00796b;
+            color: white;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
         }
-        .preview {
-            text-align: center;
+        button:hover {
+            background: #004d40;
         }
-        .preview img {
-            max-width: 100%;
+        img {
+            width: 100%;
+            max-width: 500px;
             border-radius: 10px;
         }
     </style>
 </head>
 <body>
     <h1>Gerador de Carteirinha Virtual</h1>
-    <div class="container">
-        <div class="form-container">
-            <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data">
+        <div class="container">
+            <div class="form-box">
                 <label for="nome">Atleta:</label>
-                <input type="text" name="nome" id="nome" value="{{ nome or '' }}" required>
+                <input type="text" name="nome" id="nome" required>
 
                 <label for="cidade">Cidade:</label>
-                <input type="text" name="cidade" id="cidade" value="{{ cidade or '' }}" required>
+                <input type="text" name="cidade" id="cidade">
 
                 <label for="pico">Pico:</label>
-                <input type="text" name="pico" id="pico" value="{{ pico or '' }}">
+                <input type="text" name="pico" id="pico">
 
                 <label for="categoria">Categoria:</label>
-                <input type="text" name="categoria" id="categoria" value="{{ categoria or '' }}">
+                <input type="text" name="categoria" id="categoria">
 
                 <label for="cor">Cor do texto:</label>
-                <input type="color" name="cor" id="cor" value="{{ cor or '#ffffff' }}">
+                <input type="color" name="cor" id="cor" class="color-input" value="#FFFFFF">
 
-                <label for="imagem">Imagem do cartão (proporção 856×540):</label>
+                <label for="imagem">Imagem do cartão (proporção 856x540):</label>
                 <input type="file" name="imagem" id="imagem" accept="image/*">
 
-                <div class="button-group">
-                    <button type="submit" name="acao" value="preview" style="background-color:#009688; color:white;">Visualizar</button>
-                    <button type="submit" name="acao" value="download" style="background-color:#00796B; color:white;">Baixar Carteirinha</button>
-                </div>
-            </form>
+                <button type="submit">Visualizar / Baixar Carteirinha</button>
+            </div>
+
+            <div class="preview-box">
+                <h3>Carteirinha Gerada:</h3>
+                {% if image_url %}
+                    <img src="{{ image_url }}" alt="Carteirinha">
+                    <a href="{{ url_for('download', filename=image_url.split('/')[-1]) }}">
+                        <button type="button">Baixar</button>
+                    </a>
+                {% endif %}
+            </div>
         </div>
-        <div class="preview-container">
-            <h3>Carteirinha Gerada:</h3>
-            {% if imagem_gerada %}
-                <div class="preview">
-                    <img src="{{ imagem_gerada }}" alt="Carteirinha gerada">
-                </div>
-            {% endif %}
-        </div>
-    </div>
+    </form>
 </body>
 </html>
