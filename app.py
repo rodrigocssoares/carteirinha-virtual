@@ -16,8 +16,11 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
 def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_filename):
-    base = Image.open(img_path).convert("RGBA")
-    overlay = Image.open(OVERLAY_PATH).convert("RGBA")
+    # Redimensiona a imagem base para 856x540
+    base = Image.open(img_path).convert("RGBA").resize((856, 540))
+
+    # Carrega e redimensiona o overlay para o mesmo tamanho
+    overlay = Image.open(OVERLAY_PATH).convert("RGBA").resize((856, 540))
     base.paste(overlay, (0, 0), overlay)
 
     draw = ImageDraw.Draw(base)
