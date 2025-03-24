@@ -1,4 +1,3 @@
-
 from flask import Flask, request, render_template, send_file
 from PIL import Image, ImageDraw, ImageFont
 import os
@@ -16,10 +15,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
 def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_filename):
-    # Redimensiona a imagem base para 856x540
     base = Image.open(img_path).convert("RGBA").resize((856, 540))
-
-    # Carrega e redimensiona o overlay para o mesmo tamanho
     overlay = Image.open(OVERLAY_PATH).convert("RGBA").resize((856, 540))
     base.paste(overlay, (0, 0), overlay)
 
@@ -41,6 +37,8 @@ def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_fil
 def index():
     imagem_gerada = None
     nome = cidade = pico = categoria = cor = ''
+    img_path = request.form.get("imagem_path", OVERLAY_PATH)
+
     if request.method == 'POST':
         nome = request.form.get('nome', '')
         cidade = request.form.get('cidade', '')
@@ -49,7 +47,6 @@ def index():
         cor = request.form.get('cor', '#FFFFFF')
         acao = request.form.get('acao')
 
-        img_path = OVERLAY_PATH
         if 'imagem' in request.files:
             imagem = request.files['imagem']
             if imagem and imagem.filename:
@@ -65,7 +62,16 @@ def index():
         elif acao == 'baixar':
             return send_file(result_path, as_attachment=True)
 
-    return render_template("index.html", nome=nome, cidade=cidade, pico=pico, categoria=categoria, cor=cor, imagem_gerada=imagem_gerada)
+    return render_template(
+        "index.html",
+        nome=nome,
+        cidade=cidade,
+        pico=pico,
+        categoria=categoria,
+        cor=cor,
+        imagem_gerada=imagem_gerada,
+        imagem_path=img_path
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
