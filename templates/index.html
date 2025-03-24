@@ -1,26 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Carteirinha Virtual</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
     body {
-      background: linear-gradient(to bottom, #fdf6e3, #e0f7fa);
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom, #fefae0, #d8f3dc);
       margin: 0;
       padding: 20px;
-      color: #003b46;
+      color: #023047;
     }
     h1 {
       text-align: center;
       margin-bottom: 20px;
     }
     .container {
+      max-width: 1000px;
+      margin: auto;
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
@@ -29,15 +28,15 @@
     .card {
       background: white;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       padding: 20px;
-      max-width: 400px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       width: 100%;
+      max-width: 420px;
     }
     label {
-      display: block;
-      margin-top: 10px;
       font-weight: 600;
+      margin-top: 10px;
+      display: block;
     }
     input[type="text"], input[type="color"], input[type="file"] {
       width: 100%;
@@ -53,41 +52,25 @@
     }
     button {
       flex: 1;
-      background-color: #0077cc;
+      background-color: #219ebc;
       color: white;
       padding: 10px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      font-weight: bold;
     }
     button:hover {
-      background-color: #005fa3;
+      background-color: #126782;
     }
     .preview-container {
       text-align: center;
     }
-    .preview-container h3 {
-      margin-bottom: 10px;
-    }
-    .preview {
-      border-radius: 12px;
-      border: 2px solid #ccc;
-      padding: 10px;
-      background-color: #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      max-width: 400px;
-      margin: 0 auto;
-    }
     img.preview-image {
       width: 100%;
       border-radius: 10px;
-    }
-    @media(max-width: 768px) {
-      .container {
-        flex-direction: column;
-        align-items: center;
-      }
+      border: 1px solid #ccc;
+      background: white;
     }
   </style>
 </head>
@@ -96,22 +79,22 @@
   <div class="container">
     <form class="card" action="/preview" method="post" enctype="multipart/form-data">
       <label for="nome">Atleta:</label>
-      <input type="text" name="nome" id="nome">
+      <input type="text" name="nome" required />
 
       <label for="cidade">Cidade:</label>
-      <input type="text" name="cidade" id="cidade">
+      <input type="text" name="cidade" required />
 
       <label for="pico">Pico:</label>
-      <input type="text" name="pico" id="pico">
+      <input type="text" name="pico" required />
 
       <label for="categoria">Categoria:</label>
-      <input type="text" name="categoria" id="categoria">
+      <input type="text" name="categoria" required />
 
       <label for="cor">Cor do texto:</label>
-      <input type="color" name="cor" id="cor" value="#ffffff">
+      <input type="color" name="cor" value="#ffffff" />
 
-      <label for="imagem">Imagem do cartão (proporção 856 x 540):</label>
-      <input type="file" name="imagem" id="imagem">
+      <label for="imagem">Imagem do cartão (proporção 856x540):</label>
+      <input type="file" name="imagem" required />
 
       <div class="buttons">
         <button type="submit" formaction="/preview">Visualizar</button>
@@ -122,12 +105,11 @@
     {% if imagem_base64 %}
     <div class="card preview-container">
       <h3>Carteirinha Gerada:</h3>
-      <div class="preview">
-        <img class="preview-image" src="data:image/png;base64,{{ imagem_base64 }}" alt="Carteirinha">
-      </div>
+      <img class="preview-image" src="data:image/png;base64,{{ imagem_base64 }}" alt="Preview Carteirinha"/>
     </div>
     {% endif %}
   </div>
 </body>
 </html>
+
 

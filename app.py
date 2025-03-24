@@ -1,99 +1,89 @@
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_file
 from PIL import Image, ImageDraw, ImageFont
 import os
 import uuid
+import base64
+from io import BytesIO
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'static/uploads'
+UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route('/', methods=['GET', 'POST'])
+def gerar_carteirinha(imagem, nome, cidade, pico, categoria, cor):
+    user_image = imagem.convert("RGBA").resize((856, 540))
+    overlay = Image.open("static/overlay.png").convert("RGBA").resize((856, 540))
+    combined = Image.alpha_composite(user_image, overlay)
+    draw = ImageDraw.Draw(combined)
+
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 28)
+    except:
+        font = ImageFont.load_default()
+
+    linhas = [
+        f"Atleta: {nome}",
+        f"Cidade: {cidade}",
+        f"Pico: {pico}",
+        f"Categoria: {categoria}"
+    ]
+
+    margem = 30
+    espaco = 8
+    total_altura = sum([draw.textbbox((0, 0), linha, font=font)[3] for linha in linhas]) + (len(linhas) - 1) * espaco
+    y = combined.height - total_altura - margem
+
+    for linha in linhas:
+        bbox = draw.textbbox((0, 0), linha, font=font)
+        text_height = bbox[3] - bbox[1]
+        draw.text((30, y), linha, font=font, fill=cor)
+        y += text_height + espaco
+
+    return combined
+
+@app.route("/", methods=["GET"])
 def index():
-    image_url = None
-    atleta = cidade = pico = categoria = cor = ""
-    filename = None
+    return render_template("index.html")
 
-    if request.method == 'POST':
-        atleta = request.form.get('atleta')
-        cidade = request.form.get('cidade')
-        pico = request.form.get('pico')
-        categoria = request.form.get('categoria')
-        cor = request.form.get('cor') or "#ffffff"
-        acao = request.form.get('acao')
-        imagem_original = request.form.get('imagem_original')
-        file = request.files.get('imagem')
+@app.route("/preview", methods=["POST"])
+def preview():
+    nome = request.form.get("nome", "")
+    cidade = request.form.get("cidade", "")
+    pico = request.form.get("pico", "")
+    categoria = request.form.get("categoria", "")
+    cor = request.form.get("cor", "#ffffff")
+    file = request.files.get("imagem")
 
-        if file and file.filename != "":
-            filename = f"{uuid.uuid4().hex}.png"
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(filepath)
-        elif imagem_original:
-            filename = imagem_original
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
-        else:
-            return render_template(
-                'index.html',
-                erro="Por favor, envie uma imagem para continuar.",
-                atleta=atleta,
-                cidade=cidade,
-                pico=pico,
-                categoria=categoria,
-                cor=cor
-            )
+    if not file:
+        return render_template("index.html", erro="Envie uma imagem para continuar.")
 
-        user_image = Image.open(filepath).convert("RGBA").resize((856, 540))
-        overlay = Image.open('static/overlay.png').convert("RGBA").resize((856, 540))
-        combined = Image.alpha_composite(user_image, overlay)
-        draw = ImageDraw.Draw(combined)
+    imagem = Image.open(file.stream)
+    final = gerar_carteirinha(imagem, nome, cidade, pico, categoria, cor)
 
-        try:
-            font = ImageFont.truetype("DejaVuSans-Bold.ttf", 28)
-        except:
-            font = ImageFont.load_default()
+    buffer = BytesIO()
+    final.save(buffer, format="PNG")
+    imagem_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
-        linhas = [
-            f"Atleta: {atleta}",
-            f"Cidade: {cidade}",
-            f"Pico: {pico}",
-            f"Categoria: {categoria}"
-        ]
+    return render_template("index.html", imagem_base64=imagem_base64)
 
-        margem = 30
-        espaco = 8
-        total_altura = sum([draw.textbbox((0, 0), linha, font=font)[3] for linha in linhas]) + (len(linhas) - 1) * espaco
-        y = combined.height - total_altura - margem
+@app.route("/gerar", methods=["POST"])
+def gerar():
+    nome = request.form.get("nome", "")
+    cidade = request.form.get("cidade", "")
+    pico = request.form.get("pico", "")
+    categoria = request.form.get("categoria", "")
+    cor = request.form.get("cor", "#ffffff")
+    file = request.files.get("imagem")
 
-        for linha in linhas:
-            bbox = draw.textbbox((0, 0), linha, font=font)
-            text_height = bbox[3] - bbox[1]
-            draw.text((30, y), linha, font=font, fill=cor)
-            y += text_height + espaco
+    if not file:
+        return render_template("index.html", erro="Envie uma imagem para continuar.")
 
-        if acao == "salvar":
-            final_filename = f"final_{filename}"
-            result_path = os.path.join(UPLOAD_FOLDER, final_filename)
-            combined.save(result_path)
-            return send_from_directory(UPLOAD_FOLDER, final_filename, as_attachment=True)
+    imagem = Image.open(file.stream)
+    final = gerar_carteirinha(imagem, nome, cidade, pico, categoria, cor)
 
-        else:
-            final_filename = f"preview_{filename}"
-            result_path = os.path.join(UPLOAD_FOLDER, final_filename)
-            combined.save(result_path)
-            image_url = f"/{UPLOAD_FOLDER}/{final_filename}"
+    filename = f"carteirinha_{uuid.uuid4().hex}.png"
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    final.save(filepath)
 
-            return render_template(
-                'index.html',
-                image_url=image_url,
-                image_original=filename,
-                atleta=atleta,
-                cidade=cidade,
-                pico=pico,
-                categoria=categoria,
-                cor=cor
-            )
+    return send_file(filepath, as_attachment=True)
 
-    return render_template('index.html')
 
-@app.route('/static/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(UPLOAD_FOLDER, filename)
