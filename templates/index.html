@@ -23,12 +23,20 @@
         <label for="cor">Cor do texto:</label><br>
         <input type="color" id="cor" name="cor" value="{{ cor or '#ffffff' }}"><br><br>
 
-        <label for="imagem">Imagem do cartão (proporção cartão de crédito 856 x 540):</label><br>
-        <input type="file" id="imagem" name="imagem" accept="image/*" required><br><br>
+        <label for="imagem">Imagem do cartão (proporção 856 x 540):</label><br>
+        <input type="file" id="imagem" name="imagem" accept="image/*"><br><br>
+
+        {% if image_original %}
+            <input type="hidden" name="imagem_original" value="{{ image_original }}">
+        {% endif %}
 
         <button type="submit" name="acao" value="preview">👁 Visualizar</button>
         <button type="submit" name="acao" value="salvar">📥 Baixar Carteirinha</button>
     </form>
+
+    {% if erro %}
+        <p style="color: red;">{{ erro }}</p>
+    {% endif %}
 
     {% if image_url %}
         <hr>
@@ -41,3 +49,4 @@
     {% endif %}
 </body>
 </html>
+
