@@ -73,3 +73,10 @@ def index():
         atleta=atleta,
         cidade=cidade,
         pico=pico,
+        categoria=categoria,
+        cor=cor
+    )
+
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
