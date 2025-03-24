@@ -37,7 +37,7 @@ def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_fil
 def index():
     imagem_gerada = None
     nome = cidade = pico = categoria = cor = ''
-    img_path = request.form.get("imagem_path", OVERLAY_PATH)
+    img_path = ''
 
     if request.method == 'POST':
         nome = request.form.get('nome', '')
@@ -47,12 +47,16 @@ def index():
         cor = request.form.get('cor', '#FFFFFF')
         acao = request.form.get('acao')
 
-        if 'imagem' in request.files:
-            imagem = request.files['imagem']
-            if imagem and imagem.filename:
-                filename = secure_filename(imagem.filename)
-                img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                imagem.save(img_path)
+        imagem = request.files.get('imagem')
+        if imagem and imagem.filename:
+            filename = secure_filename(imagem.filename)
+            img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            imagem.save(img_path)
+        else:
+            img_path = request.form.get('imagem_path', '')
+
+        if not os.path.exists(img_path):
+            return render_template('index.html', erro="Imagem não encontrada.")
 
         result_filename = f"final_{secure_filename(nome)}.png"
         result_path = generate_card(img_path, nome, cidade, pico, categoria, cor, result_filename)
@@ -62,16 +66,9 @@ def index():
         elif acao == 'baixar':
             return send_file(result_path, as_attachment=True)
 
-    return render_template(
-        "index.html",
-        nome=nome,
-        cidade=cidade,
-        pico=pico,
-        categoria=categoria,
-        cor=cor,
-        imagem_gerada=imagem_gerada,
-        imagem_path=img_path
-    )
+        return render_template("index.html", nome=nome, cidade=cidade, pico=pico,
+                               categoria=categoria, cor=cor, imagem_gerada=imagem_gerada,
+                               imagem_path=img_path)
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    return render_template("index.html")
+
