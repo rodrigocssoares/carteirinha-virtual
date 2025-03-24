@@ -6,14 +6,14 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom right, #fffbe6, #d6f5e3);
+            background: linear-gradient(to bottom right, #fffde4, #d7fbd7);
             margin: 0;
             padding: 30px;
         }
         .container {
             display: flex;
             gap: 30px;
-            max-width: 1200px;
+            max-width: 1100px;
             margin: auto;
         }
         .form-box, .preview-box {
@@ -29,32 +29,35 @@
         }
         label {
             font-weight: bold;
-        }
-        input, select, button {
+            margin-top: 10px;
             display: block;
-            margin-bottom: 15px;
-            padding: 8px;
+        }
+        input[type="text"], input[type="file"], input[type="color"] {
             width: 100%;
+            padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
+            margin-bottom: 15px;
         }
-        .color-input {
+        input[type="color"] {
             height: 40px;
-            padding: 0;
         }
         button {
             background: #00796b;
             color: white;
+            padding: 10px 20px;
             border: none;
+            border-radius: 6px;
             cursor: pointer;
         }
         button:hover {
             background: #004d40;
         }
-        img {
+        .preview-box img {
             width: 100%;
             max-width: 500px;
-            border-radius: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -64,33 +67,31 @@
         <div class="container">
             <div class="form-box">
                 <label for="nome">Atleta:</label>
-                <input type="text" name="nome" id="nome" required>
+                <input type="text" name="nome" id="nome" value="{{ nome or '' }}" required>
 
                 <label for="cidade">Cidade:</label>
-                <input type="text" name="cidade" id="cidade">
+                <input type="text" name="cidade" id="cidade" value="{{ cidade or '' }}">
 
                 <label for="pico">Pico:</label>
-                <input type="text" name="pico" id="pico">
+                <input type="text" name="pico" id="pico" value="{{ pico or '' }}">
 
                 <label for="categoria">Categoria:</label>
-                <input type="text" name="categoria" id="categoria">
+                <input type="text" name="categoria" id="categoria" value="{{ categoria or '' }}">
 
                 <label for="cor">Cor do texto:</label>
-                <input type="color" name="cor" id="cor" class="color-input" value="#FFFFFF">
+                <input type="color" name="cor" id="cor" value="{{ cor or '#FFFFFF' }}">
 
-                <label for="imagem">Imagem do cartão (proporção 856x540):</label>
-                <input type="file" name="imagem" id="imagem" accept="image/*">
+                <label for="imagem">Imagem do cartão:</label>
+                <input type="file" name="imagem" id="imagem" accept="image/*" required>
 
-                <button type="submit">Visualizar / Baixar Carteirinha</button>
+                <button type="submit" name="acao" value="visualizar">Visualizar</button>
+                <button type="submit" name="acao" value="baixar">Baixar Carteirinha</button>
             </div>
 
             <div class="preview-box">
                 <h3>Carteirinha Gerada:</h3>
-                {% if image_url %}
-                    <img src="{{ image_url }}" alt="Carteirinha">
-                    <a href="{{ url_for('download', filename=image_url.split('/')[-1]) }}">
-                        <button type="button">Baixar</button>
-                    </a>
+                {% if imagem_gerada %}
+                    <img src="{{ imagem_gerada }}" alt="Preview Carteirinha">
                 {% endif %}
             </div>
         </div>
