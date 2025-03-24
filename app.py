@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, send_from_directory
 from PIL import Image, ImageDraw, ImageFont
 import os
 import uuid
@@ -9,6 +9,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    image_url = None
+
     if request.method == 'POST':
         nome = request.form.get('nome')
         cidade = request.form.get('cidade')
@@ -17,24 +19,20 @@ def index():
         file = request.files.get('imagem')
 
         if file:
-            # Salvar imagem original enviada
             filename = f"{uuid.uuid4().hex}.png"
             filepath = os.path.join(UPLOAD_FOLDER, filename)
             file.save(filepath)
 
-            # Abrir imagem e overlay
             user_image = Image.open(filepath).convert("RGBA").resize((856, 540))
             overlay = Image.open('static/overlay.png').convert("RGBA").resize((856, 540))
             combined = Image.alpha_composite(user_image, overlay)
             draw = ImageDraw.Draw(combined)
 
-            # Fonte
             try:
                 font = ImageFont.truetype("DejaVuSans-Bold.ttf", 28)
             except:
                 font = ImageFont.load_default()
 
-            # Linhas com legenda
             linhas = [
                 f"Nome: {nome}",
                 f"Cidade: {cidade}",
@@ -42,7 +40,6 @@ def index():
                 f"Categoria: {categoria}"
             ]
 
-            # Calcular posição inicial (de baixo para cima)
             margem = 30
             espaco = 8
             total_altura = sum([draw.textbbox((0, 0), linha, font=font)[3] for linha in linhas]) + (len(linhas) - 1) * espaco
@@ -54,13 +51,14 @@ def index():
                 draw.text((30, y), linha, font=font, fill="white")
                 y += text_height + espaco
 
-            # Salvar imagem final
-            result_path = os.path.join(UPLOAD_FOLDER, f"final_{filename}")
+            final_filename = f"final_{filename}"
+            result_path = os.path.join(UPLOAD_FOLDER, final_filename)
             combined.save(result_path)
 
-            return send_file(result_path, as_attachment=True)
+            image_url = f"/{UPLOAD_FOLDER}/{final_filename}"
 
-    return render_template('index.html')
+    return render_template('index.html', image_url=image_url)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
