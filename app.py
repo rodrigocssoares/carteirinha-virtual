@@ -22,12 +22,12 @@ def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_fil
     draw = ImageDraw.Draw(base)
     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     try:
-        font = ImageFont.truetype(font_path, 28)
+        font = ImageFont.truetype(font_path, 20)
     except:
         font = ImageFont.load_default()
 
     texto = f"Atleta: {nome}\nCidade: {cidade}\nPico: {pico}\nCategoria: {categoria}"
-    draw.text((40, base.height - 120), texto, fill=cor_texto, font=font)
+    draw.text((40, base.height - 80), texto, fill=cor_texto, font=font)
 
     result_path = os.path.join(app.config['RESULT_FOLDER'], result_filename)
     base.save(result_path)
