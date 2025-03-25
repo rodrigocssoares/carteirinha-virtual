@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, send_file
 from PIL import Image, ImageDraw, ImageFont
 import os
+import pandas as pd
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -8,11 +9,19 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 RESULT_FOLDER = 'static/results'
 OVERLAY_PATH = 'static/overlay.png'
+CSV_PATH = 'ListaAtletas.csv'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = RESULT_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
+
+def carregar_dados_atleta(id_atleta):
+    df = pd.read_csv(CSV_PATH)
+    atleta = df[df['ID'] == int(id_atleta)]
+    if not atleta.empty:
+        return atleta.iloc[0]['Nome'], atleta.iloc[0]['Categoria']
+    return None, None
 
 def generate_card(img_path, nome, estado, cidade, categoria, cor_texto, result_filename):
     base = Image.open(img_path).convert("RGBA").resize((856, 540))
@@ -27,7 +36,8 @@ def generate_card(img_path, nome, estado, cidade, categoria, cor_texto, result_f
         font = ImageFont.load_default()
 
     texto = f"Atleta: {nome}\nEstado: {estado}\nCidade: {cidade}\nCategoria: {categoria}"
-    text_width, text_height = draw.multiline_textbbox((0, 0), texto, font=font, spacing=4)[2:]
+    bbox = draw.textbbox((0, 0), texto, font=font)
+    text_height = bbox[3] - bbox[1]
     text_position = (40, base.height - text_height - 40)
 
     draw.multiline_text(text_position, texto, fill=cor_texto, font=font, spacing=4)
@@ -39,21 +49,24 @@ def generate_card(img_path, nome, estado, cidade, categoria, cor_texto, result_f
 @app.route('/', methods=['GET', 'POST'])
 def index():
     imagem_gerada = None
+    erro = ''
     nome = estado = cidade = categoria = cor = ''
-    result_path = ''
-    img_path = OVERLAY_PATH
+    id_atleta = ''
+    img_path = ''
 
     if request.method == 'POST':
-        nome = request.form.get('nome', '')
+        id_atleta = request.form.get('id_atleta', '')
         estado = request.form.get('estado', '')
         cidade = request.form.get('cidade', '')
-        categoria = request.form.get('categoria', '')
         cor = request.form.get('cor', '#FFFFFF')
         acao = request.form.get('acao')
 
-        imagem_path = request.form.get("imagem_path", "")
-        if imagem_path and os.path.exists(imagem_path):
-            img_path = imagem_path
+        nome, categoria = carregar_dados_atleta(id_atleta)
+        if not nome:
+            erro = "ID do atleta não encontrado."
+            return render_template('index.html', erro=erro, id_atleta=id_atleta)
+
+        img_path = request.form.get('imagem_path', '')
 
         if 'imagem' in request.files:
             imagem = request.files['imagem']
@@ -61,6 +74,10 @@ def index():
                 filename = secure_filename(imagem.filename)
                 img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 imagem.save(img_path)
+
+        if not img_path or not os.path.exists(img_path):
+            erro = "Imagem não encontrada."
+            return render_template('index.html', erro=erro, id_atleta=id_atleta)
 
         result_filename = f"final_{secure_filename(nome)}.png"
         result_path = generate_card(img_path, nome, estado, cidade, categoria, cor, result_filename)
@@ -70,16 +87,11 @@ def index():
         elif acao == 'baixar':
             return send_file(result_path, as_attachment=True)
 
-    return render_template(
-        "index.html",
-        nome=nome,
-        estado=estado,
-        cidade=cidade,
-        categoria=categoria,
-        cor=cor,
-        imagem_gerada=imagem_gerada,
-        imagem_path=img_path
-    )
+        return render_template("index.html", id_atleta=id_atleta, nome=nome, estado=estado,
+                               cidade=cidade, categoria=categoria, cor=cor,
+                               imagem_gerada=imagem_gerada, imagem_path=img_path)
+
+    return render_template("index.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
