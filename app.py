@@ -1,3 +1,4 @@
+
 from flask import Flask, request, render_template, send_file
 from PIL import Image, ImageDraw, ImageFont
 import os
@@ -22,12 +23,17 @@ def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_fil
     draw = ImageDraw.Draw(base)
     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     try:
-        font = ImageFont.truetype(font_path, 20)
+        font = ImageFont.truetype(font_path, 22)
     except:
         font = ImageFont.load_default()
 
     texto = f"Atleta: {nome}\nCidade: {cidade}\nPico: {pico}\nCategoria: {categoria}"
-    draw.text((40, base.height - 80), texto, fill=cor_texto, font=font)
+
+    bbox = draw.textbbox((0, 0), texto, font=font)
+    text_height = bbox[3] - bbox[1]
+    text_position = (40, base.height - text_height - 40)
+
+    draw.text(text_position, texto, fill=cor_texto, font=font)
 
     result_path = os.path.join(app.config['RESULT_FOLDER'], result_filename)
     base.save(result_path)
@@ -37,8 +43,7 @@ def generate_card(img_path, nome, cidade, pico, categoria, cor_texto, result_fil
 def index():
     imagem_gerada = None
     nome = cidade = pico = categoria = cor = ''
-    img_path = ''
-
+    result_path = img_path = ''
     if request.method == 'POST':
         nome = request.form.get('nome', '')
         cidade = request.form.get('cidade', '')
@@ -47,16 +52,13 @@ def index():
         cor = request.form.get('cor', '#FFFFFF')
         acao = request.form.get('acao')
 
-        imagem = request.files.get('imagem')
-        if imagem and imagem.filename:
-            filename = secure_filename(imagem.filename)
-            img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            imagem.save(img_path)
-        else:
-            img_path = request.form.get('imagem_path', '')
-
-        if not os.path.exists(img_path):
-            return render_template('index.html', erro="Imagem não encontrada.")
+        img_path = request.form.get("imagem_path", OVERLAY_PATH)
+        if 'imagem' in request.files:
+            imagem = request.files['imagem']
+            if imagem and imagem.filename:
+                filename = secure_filename(imagem.filename)
+                img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                imagem.save(img_path)
 
         result_filename = f"final_{secure_filename(nome)}.png"
         result_path = generate_card(img_path, nome, cidade, pico, categoria, cor, result_filename)
@@ -66,9 +68,16 @@ def index():
         elif acao == 'baixar':
             return send_file(result_path, as_attachment=True)
 
-        return render_template("index.html", nome=nome, cidade=cidade, pico=pico,
-                               categoria=categoria, cor=cor, imagem_gerada=imagem_gerada,
-                               imagem_path=img_path)
+    return render_template(
+        "index.html",
+        nome=nome,
+        cidade=cidade,
+        pico=pico,
+        categoria=categoria,
+        cor=cor,
+        imagem_gerada=result_path,
+        imagem_path=img_path
+    )
 
-    return render_template("index.html")
-
+if __name__ == "__main__":
+    app.run(debug=True)
