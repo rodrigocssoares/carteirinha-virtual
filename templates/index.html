@@ -146,7 +146,7 @@ function filtrarNomes() {
 function selecionarID(id) {
     document.getElementById('id_atleta').value = id;
     fecharModal();
-    document.getElementById('id_atleta').dispatchEvent(new Event('blur'));
+    buscarAtletaPorID(id);
 }
 </script>
 
