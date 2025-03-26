@@ -104,7 +104,96 @@
                 {% endif %}
             </div>
         </div>
-    </form>
+    
+    <div style="text-align:center; margin-top: 10px;">
+        <button type="button" onclick="abrirModal()">🔍 Consultar meu ID</button>
+    </div>
+</form>
+
+<!-- Modal de Consulta de ID -->
+<div id="modalConsulta" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="fecharModal()">&times;</span>
+    <h2>Consulta de ID</h2>
+    <input type="text" id="buscaNome" onkeyup="filtrarNomes()" placeholder="Digite um nome...">
+    <ul id="listaNomes">
+      {% for _, row in atletas.iterrows() %}
+        <li><strong>{{ row['ID'] }}</strong> - {{ row['Nome'] }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<style>
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #ffffff;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 90%;
+  max-width: 500px;
+  border-radius: 8px;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: black;
+}
+
+#listaNomes {
+  list-style: none;
+  padding: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+#listaNomes li {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+</style>
+
+<script>
+function abrirModal() {
+    document.getElementById('modalConsulta').style.display = 'block';
+}
+
+function fecharModal() {
+    document.getElementById('modalConsulta').style.display = 'none';
+}
+
+function filtrarNomes() {
+    let input = document.getElementById('buscaNome');
+    let filtro = input.value.toLowerCase();
+    let lista = document.getElementById('listaNomes');
+    let itens = lista.getElementsByTagName('li');
+    for (let i = 0; i < itens.length; i++) {
+        let texto = itens[i].textContent || itens[i].innerText;
+        itens[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
+    }
+}
+</script>
+
 
     <script>
     document.getElementById('id_atleta').addEventListener('blur', function() {
@@ -137,7 +226,7 @@
 <!-- Tela de carregamento -->
 <div id="loading-overlay">
     <div class="loading-content">
-        <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHlmZTg5YW44MzRrZXNsd2hjc2x4c2I4cXZqM3RjcGYxMzFlYXEzaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/HGvjR72DXRHWw/giphy.gif" alt="Onda" width="120">
+        <img src="https://media.giphy.com/media/l0MYEqEzwMWFCg8rm/giphy.gif" alt="Onda" width="120">
         <p>Aguenta aí! Estamos acordando o sistema...<br>como quem espera a série perfeita no outside 🌊</p>
     </div>
 </div>

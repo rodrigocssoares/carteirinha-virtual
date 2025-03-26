@@ -68,7 +68,8 @@ def index():
         nome, categoria = carregar_dados_atleta(id_atleta)
         if not nome:
             erro = "ID do atleta não encontrado."
-            return render_template('index.html', erro=erro, id_atleta=id_atleta)
+                    df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
+        return render_template("index.html", erro=erro, id_atleta=id_atleta, atletas=df)
 
         img_path = request.form.get('imagem_path', '')
 
@@ -81,7 +82,8 @@ def index():
 
         if not img_path or not os.path.exists(img_path):
             erro = "Imagem não encontrada."
-            return render_template('index.html', erro=erro, id_atleta=id_atleta)
+                    df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
+        return render_template("index.html", erro=erro, id_atleta=id_atleta, atletas=df)
 
         result_filename = f"final_{secure_filename(nome)}.png"
         result_path = generate_card(img_path, nome, estado, cidade, categoria, cor, result_filename)
@@ -91,11 +93,13 @@ def index():
         elif acao == 'baixar':
             return send_file(result_path, as_attachment=True)
 
-        return render_template("index.html", id_atleta=id_atleta, nome=nome, estado=estado,
+                df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
+        return render_template("index.html", atletas=df, id_atleta=id_atleta, nome=nome, estado=estado,
                                cidade=cidade, categoria=categoria, cor=cor,
                                imagem_gerada=imagem_gerada, imagem_path=img_path)
 
-    return render_template("index.html")
+        df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
+    return render_template("index.html", atletas=df)
 
 @app.route('/buscar_atleta', methods=['POST'])
 def buscar_atleta():
