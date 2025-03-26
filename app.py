@@ -9,7 +9,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 RESULT_FOLDER = 'static/results'
 OVERLAY_PATH = 'static/overlay.png'
-CSV_PATH = 'data\ListaAtletas.csv'
+CSV_PATH = 'data/ListaAtletas.csv'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = RESULT_FOLDER
 
