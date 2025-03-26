@@ -105,5 +105,33 @@
             </div>
         </div>
     </form>
+
+    <script>
+    document.getElementById('id_atleta').addEventListener('blur', function() {
+        const id = this.value;
+        if (!id) return;
+
+        fetch('/buscar_atleta', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `id_atleta=${id}`
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('ID não encontrado');
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('nome').value = data.nome;
+            document.getElementById('categoria').value = data.categoria;
+        })
+        .catch(error => {
+            document.getElementById('nome').value = '';
+            document.getElementById('categoria').value = '';
+            alert(error.message);
+        });
+    });
+    </script>
 </body>
 </html>

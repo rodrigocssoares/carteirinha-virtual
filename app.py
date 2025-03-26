@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template, send_file, jsonify
 from PIL import Image, ImageDraw, ImageFont
 import os
 import pandas as pd
@@ -9,7 +9,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 RESULT_FOLDER = 'static/results'
 OVERLAY_PATH = 'static/overlay.png'
-CSV_PATH = 'ListaAtletas.csv'
+CSV_PATH = 'data/ListaAtletas.csv'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = RESULT_FOLDER
 
@@ -92,6 +92,14 @@ def index():
                                imagem_gerada=imagem_gerada, imagem_path=img_path)
 
     return render_template("index.html")
+
+@app.route('/buscar_atleta', methods=['POST'])
+def buscar_atleta():
+    id_atleta = request.form.get('id_atleta')
+    nome, categoria = carregar_dados_atleta(id_atleta)
+    if nome:
+        return jsonify({'nome': nome, 'categoria': categoria})
+    return jsonify({'erro': 'ID não encontrado'}), 404
 
 if __name__ == "__main__":
     app.run(debug=True)
