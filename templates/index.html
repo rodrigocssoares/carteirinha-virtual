@@ -133,5 +133,44 @@
         });
     });
     </script>
+
+<!-- Tela de carregamento -->
+<div id="loading-overlay">
+    <div class="loading-content">
+        <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHlmZTg5YW44MzRrZXNsd2hjc2x4c2I4cXZqM3RjcGYxMzFlYXEzaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/HGvjR72DXRHWw/giphy.gif" alt="Onda" width="120">
+        <p>Aguenta aí! Estamos acordando o sistema...<br>como quem espera a série perfeita no outside 🌊</p>
+    </div>
+</div>
+
+<script>
+window.addEventListener('load', function () {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+});
+</script>
+
+<style>
+#loading-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: #e0f7fa;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    color: #00796b;
+    text-align: center;
+}
+.loading-content img {
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+</style>
+
 </body>
 </html>

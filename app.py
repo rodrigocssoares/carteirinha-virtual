@@ -35,7 +35,11 @@ def generate_card(img_path, nome, estado, cidade, categoria, cor_texto, result_f
     except:
         font = ImageFont.load_default()
 
-    texto = f"Atleta: {nome}\nEstado: {estado}\nCidade: {cidade}\nCategoria: {categoria}"
+    linha1 = nome
+    linha2 = f"{cidade} - {estado}"
+    linha3 = f"Categoria: {categoria}"
+    texto = f"{linha1}\n{linha2}\n{linha3}"
+
     bbox = draw.textbbox((0, 0), texto, font=font)
     text_height = bbox[3] - bbox[1]
     text_position = (40, base.height - text_height - 40)
