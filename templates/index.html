@@ -68,7 +68,10 @@
                 {% endif %}
 
                 <label for="id_atleta">ID do Atleta:</label>
-                <input type="number" id="id_atleta" name="id_atleta" value="{{ id_atleta or '' }}" required>
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" id="id_atleta" name="id_atleta" value="{{ id_atleta or '' }}" required style="flex: 1;">
+                    <button type="button" onclick="abrirModal()" style="white-space: nowrap;">🔍</button>
+                </div>
 
                 <label for="nome">Nome:</label>
                 <input type="text" id="nome" name="nome" value="{{ nome or '' }}" readonly>
@@ -104,11 +107,7 @@
                 {% endif %}
             </div>
         </div>
-    
-    <div style="text-align:center; margin-top: 10px;">
-        <button type="button" onclick="abrirModal()">🔍 Consultar meu ID</button>
-    </div>
-</form>
+    </form>
 
 <!-- Modal de Consulta de ID -->
 <div id="modalConsulta" class="modal">
@@ -123,6 +122,25 @@
     </ul>
   </div>
 </div>
+
+<script>
+function abrirModal() {
+    document.getElementById('modalConsulta').style.display = 'block';
+}
+function fecharModal() {
+    document.getElementById('modalConsulta').style.display = 'none';
+}
+function filtrarNomes() {
+    let input = document.getElementById('buscaNome');
+    let filtro = input.value.toLowerCase();
+    let lista = document.getElementById('listaNomes');
+    let itens = lista.getElementsByTagName('li');
+    for (let i = 0; i < itens.length; i++) {
+        let texto = itens[i].textContent || itens[i].innerText;
+        itens[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
+    }
+}
+</script>
 
 <style>
 .modal {
@@ -172,94 +190,5 @@
   border-bottom: 1px solid #eee;
 }
 </style>
-
-<script>
-function abrirModal() {
-    document.getElementById('modalConsulta').style.display = 'block';
-}
-
-function fecharModal() {
-    document.getElementById('modalConsulta').style.display = 'none';
-}
-
-function filtrarNomes() {
-    let input = document.getElementById('buscaNome');
-    let filtro = input.value.toLowerCase();
-    let lista = document.getElementById('listaNomes');
-    let itens = lista.getElementsByTagName('li');
-    for (let i = 0; i < itens.length; i++) {
-        let texto = itens[i].textContent || itens[i].innerText;
-        itens[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
-    }
-}
-</script>
-
-
-    <script>
-    document.getElementById('id_atleta').addEventListener('blur', function() {
-        const id = this.value;
-        if (!id) return;
-
-        fetch('/buscar_atleta', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `id_atleta=${id}`
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('ID não encontrado');
-            return response.json();
-        })
-        .then(data => {
-            document.getElementById('nome').value = data.nome;
-            document.getElementById('categoria').value = data.categoria;
-        })
-        .catch(error => {
-            document.getElementById('nome').value = '';
-            document.getElementById('categoria').value = '';
-            alert(error.message);
-        });
-    });
-    </script>
-
-<!-- Tela de carregamento -->
-<div id="loading-overlay">
-    <div class="loading-content">
-        <img src="https://media.giphy.com/media/l0MYEqEzwMWFCg8rm/giphy.gif" alt="Onda" width="120">
-        <p>Aguenta aí! Estamos acordando o sistema...<br>como quem espera a série perfeita no outside 🌊</p>
-    </div>
-</div>
-
-<script>
-window.addEventListener('load', function () {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
-});
-</script>
-
-<style>
-#loading-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: #e0f7fa;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    font-family: Arial, sans-serif;
-    color: #00796b;
-    text-align: center;
-}
-.loading-content img {
-    margin-bottom: 20px;
-    border-radius: 8px;
-}
-</style>
-
 </body>
 </html>
