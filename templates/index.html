@@ -117,7 +117,9 @@
     <input type="text" id="buscaNome" onkeyup="filtrarNomes()" placeholder="Digite um nome...">
     <ul id="listaNomes">
       {% for _, row in atletas.iterrows() %}
-        <li><strong>{{ row['ID'] }}</strong> - {{ row['Nome'] }}</li>
+        <li onclick="selecionarID('{{ row['ID'] }}')" style="cursor: pointer;" data-id="{{ row['ID'] }}">
+            <strong>{{ row['ID'] }}</strong> - {{ row['Nome'] }}
+        </li>
       {% endfor %}
     </ul>
   </div>
@@ -139,6 +141,12 @@ function filtrarNomes() {
         let texto = itens[i].textContent || itens[i].innerText;
         itens[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
     }
+}
+
+function selecionarID(id) {
+    document.getElementById('id_atleta').value = id;
+    fecharModal();
+    document.getElementById('id_atleta').dispatchEvent(new Event('blur'));
 }
 </script>
 
