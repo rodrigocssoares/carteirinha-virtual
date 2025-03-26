@@ -9,7 +9,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 RESULT_FOLDER = 'static/results'
 OVERLAY_PATH = 'static/overlay.png'
-CSV_PATH = 'data/ListaAtletas.csv'
+CSV_PATH = r'C:\\Users\\rod12\\Documents\\CodigoCarteirinha\\data\\ListaAtletas.csv'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = RESULT_FOLDER
 
@@ -68,7 +68,7 @@ def index():
         nome, categoria = carregar_dados_atleta(id_atleta)
         if not nome:
             erro = "ID do atleta não encontrado."
-                    df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
+            df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
         return render_template("index.html", erro=erro, id_atleta=id_atleta, atletas=df)
 
         img_path = request.form.get('imagem_path', '')
@@ -82,7 +82,7 @@ def index():
 
         if not img_path or not os.path.exists(img_path):
             erro = "Imagem não encontrada."
-                    df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
+            df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
         return render_template("index.html", erro=erro, id_atleta=id_atleta, atletas=df)
 
         result_filename = f"final_{secure_filename(nome)}.png"
@@ -93,12 +93,11 @@ def index():
         elif acao == 'baixar':
             return send_file(result_path, as_attachment=True)
 
-                df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
-        return render_template("index.html", atletas=df, id_atleta=id_atleta, nome=nome, estado=estado,
+        return render_template("index.html", id_atleta=id_atleta, nome=nome, estado=estado,
                                cidade=cidade, categoria=categoria, cor=cor,
                                imagem_gerada=imagem_gerada, imagem_path=img_path)
 
-        df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
+    df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
     return render_template("index.html", atletas=df)
 
 @app.route('/buscar_atleta', methods=['POST'])
