@@ -70,15 +70,15 @@
         {% endif %}
 
         <input type="hidden" id="id_atleta" name="id_atleta" value="{{ id_atleta or '' }}">
-        <div style="text-align: right; margin-bottom: 10px;">
-          <button type="button" onclick="abrirModal()">🔍 Consulta ID</button>
+        <div style="text-align: left; margin-bottom: 10px;">
+          <button type="button" onclick="abrirModal()">🔍 Consulta Atleta</button>
         </div>
 
         <label for="nome">Nome:</label>
-        <input type="text" id="nome" name="nome" value="{{ nome or '' }}" readonly>
+        <input type="text" id="nome" name="nome" value="{{ nome or '' }}" readonly style="border: none; background: transparent; font-weight: bold; cursor: default;">
 
         <label for="categoria">Categoria:</label>
-        <input type="text" id="categoria" name="categoria" value="{{ categoria or '' }}" readonly>
+        <input type="text" id="categoria" name="categoria" value="{{ categoria or '' }}" readonly style="border: none; background: transparent; font-weight: bold; cursor: default;">
 
         <label for="estado">Estado:</label>
         <input type="text" id="estado" name="estado" value="{{ estado or '' }}">
