@@ -1,4 +1,217 @@
+
 <!DOCTYPE html>
-<!-- O conteúdo completo do index com input ID oculto seria carregado aqui, mas vamos recriar a última versão funcional -->
-<!-- Para fins de demonstração, adicionaremos um placeholder mínimo -->
-<html><head><title>Gerador</title></head><body>Erro ao recarregar contexto.</body></html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Carteirinha Virtual</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #fefcea, #d5fefd);
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .form-box, .preview-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 420px;
+    }
+    h1 {
+      text-align: center;
+      color: #004d40;
+    }
+    label {
+      font-weight: bold;
+    }
+    input[type="text"], input[type="color"], input[type="file"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      padding: 10px 16px;
+      margin-right: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      background-color: #00796b;
+    }
+    button:hover {
+      background-color: #004d40;
+    }
+    .image-preview {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+    .erro {
+      color: red;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gerador de Carteirinha Virtual</h1>
+  <form method="POST" enctype="multipart/form-data">
+    <div class="container">
+      <div class="form-box">
+        {% if erro %}
+          <div class="erro">{{ erro }}</div>
+        {% endif %}
+
+        <input type="hidden" id="id_atleta" name="id_atleta" value="{{ id_atleta or '' }}">
+        <div style="text-align: right; margin-bottom: 10px;">
+          <button type="button" onclick="abrirModal()">🔍 Consulta ID</button>
+        </div>
+
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" value="{{ nome or '' }}" readonly>
+
+        <label for="categoria">Categoria:</label>
+        <input type="text" id="categoria" name="categoria" value="{{ categoria or '' }}" readonly>
+
+        <label for="estado">Estado:</label>
+        <input type="text" id="estado" name="estado" value="{{ estado or '' }}">
+
+        <label for="cidade">Cidade:</label>
+        <input type="text" id="cidade" name="cidade" value="{{ cidade or '' }}">
+
+        <label for="cor">Cor do texto:</label>
+        <input type="color" id="cor" name="cor" value="{{ cor or '#FFFFFF' }}">
+
+        <label for="imagem">Imagem do cartão (proporção 856×540):</label>
+        <input type="file" id="imagem" name="imagem">
+        {% if imagem_path %}
+          <input type="hidden" name="imagem_path" value="{{ imagem_path }}">
+        {% endif %}
+
+        <button type="submit" name="acao" value="visualizar">Visualizar</button>
+        <button type="submit" name="acao" value="baixar">Baixar Carteirinha</button>
+      </div>
+
+      <div class="preview-box">
+        <h3>Carteirinha Gerada:</h3>
+        {% if imagem_gerada %}
+          <img src="{{ imagem_gerada }}" class="image-preview">
+        {% else %}
+          <p>Nenhuma carteirinha gerada ainda.</p>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+
+  <!-- Modal -->
+  <div id="modalConsulta" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="fecharModal()">&times;</span>
+      <h2>Consulta de ID</h2>
+      <input type="text" id="buscaNome" onkeyup="filtrarNomes()" placeholder="Digite um nome...">
+      <ul id="listaNomes">
+        {% for _, row in atletas.iterrows() %}
+          <li onclick="selecionarID('{{ row['ID'] }}')" style="cursor: pointer;">
+            <strong>{{ row['ID'] }}</strong> - {{ row['Nome'] }}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    function abrirModal() {
+      document.getElementById('modalConsulta').style.display = 'block';
+    }
+    function fecharModal() {
+      document.getElementById('modalConsulta').style.display = 'none';
+    }
+    function selecionarID(id) {
+      document.getElementById('id_atleta').value = id;
+      fecharModal();
+      buscarAtletaPorID(id);
+    }
+    function buscarAtletaPorID(id) {
+      if (!id) return;
+
+      fetch('/buscar_atleta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id_atleta=${id}`
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('ID não encontrado');
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById('nome').value = data.nome;
+        document.getElementById('categoria').value = data.categoria;
+      })
+      .catch(error => {
+        document.getElementById('nome').value = '';
+        document.getElementById('categoria').value = '';
+        alert(error.message);
+      });
+    }
+    function filtrarNomes() {
+      let filtro = document.getElementById('buscaNome').value.toLowerCase();
+      let itens = document.getElementById('listaNomes').getElementsByTagName('li');
+      for (let i = 0; i < itens.length; i++) {
+        let texto = itens[i].textContent || itens[i].innerText;
+        itens[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
+      }
+    }
+  </script>
+
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 8px;
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: black;
+    }
+    #listaNomes {
+      list-style: none;
+      padding: 0;
+      max-height: 300px;
+      overflow-y: auto;
+      text-align: left;
+    }
+    #listaNomes li {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+  </style>
+</body>
+</html>
