@@ -1,9 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <title>Carteirinha Virtual</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -90,7 +91,14 @@
         <input type="color" id="cor" name="cor" value="{{ cor or '#FFFFFF' }}">
 
         <label for="imagem">Imagem do cartão (proporção 856×540):</label>
-        <input type="file" id="imagem" name="imagem">
+        <input type="file" id="imagem" name="imagem" accept="image/*" onchange="carregarImagem(event)">
+        <canvas id="canvasCorte" style="display: none; margin-top: 10px; max-width: 100%;"></canvas>
+        <div id="cropContainer" style="max-width: 100%; margin-top: 10px;">
+          <img id="imagemPreview" style="max-width: 100%; display: none;" />
+        </div>
+        <input type="hidden" id="imagem_cropada" name="imagem_cropada">
+        <button type="button" onclick="aplicarCorte()">Aplicar Corte</button>
+
         {% if imagem_path %}
           <input type="hidden" name="imagem_path" value="{{ imagem_path }}">
         {% endif %}
@@ -125,50 +133,6 @@
       </ul>
     </div>
   </div>
-
-  <script>
-    function abrirModal() {
-      document.getElementById('modalConsulta').style.display = 'block';
-    }
-    function fecharModal() {
-      document.getElementById('modalConsulta').style.display = 'none';
-    }
-    function selecionarID(id) {
-      document.getElementById('id_atleta').value = id;
-      fecharModal();
-      buscarAtletaPorID(id);
-    }
-    function buscarAtletaPorID(id) {
-      if (!id) return;
-
-      fetch('/buscar_atleta', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id_atleta=${id}`
-      })
-      .then(response => {
-        if (!response.ok) throw new Error('ID não encontrado');
-        return response.json();
-      })
-      .then(data => {
-        document.getElementById('nome').value = data.nome;
-        document.getElementById('categoria').value = data.categoria;
-      })
-      .catch(error => {
-        document.getElementById('nome').value = '';
-        document.getElementById('categoria').value = '';
-        alert(error.message);
-      });
-    }
-    function filtrarNomes() {
-      let filtro = document.getElementById('buscaNome').value.toLowerCase();
-      let itens = document.getElementById('listaNomes').getElementsByTagName('li');
-      for (let i = 0; i < itens.length; i++) {
-        let texto = itens[i].textContent || itens[i].innerText;
-        itens[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
-      }
-    }
-  </script>
 
   <style>
     .modal {
@@ -213,5 +177,84 @@
       border-bottom: 1px solid #eee;
     }
   </style>
+
+  <script>
+    function abrirModal() {
+      document.getElementById('modalConsulta').style.display = 'block';
+    }
+    function fecharModal() {
+      document.getElementById('modalConsulta').style.display = 'none';
+    }
+    function selecionarID(id) {
+      document.getElementById('id_atleta').value = id;
+      fecharModal();
+      buscarAtletaPorID(id);
+    }
+    function buscarAtletaPorID(id) {
+      if (!id) return;
+
+      fetch('/buscar_atleta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id_atleta=${id}`
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('ID não encontrado');
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById('nome').value = data.nome;
+        document.getElementById('categoria').value = data.categoria;
+      })
+      .catch(error => {
+        document.getElementById('nome').value = '';
+        document.getElementById('categoria').value = '';
+        alert(error.message);
+      });
+    }
+    function filtrarNomes() {
+      let filtro = document.getElementById('buscaNome').value.toLowerCase();
+      let itens = document.getElementById('listaNomes').getElementsByTagName('li');
+      for (let i = 0; i < itens.length; i++) {
+        let texto = itens[i].textContent || itens[i].innerText;
+        itens[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
+      }
+    }
+
+    let cropper;
+    function carregarImagem(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const imgPreview = document.getElementById('imagemPreview');
+        imgPreview.src = URL.createObjectURL(file);
+        imgPreview.style.display = 'block';
+
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(imgPreview, {
+          aspectRatio: 856 / 540,
+          viewMode: 1,
+          autoCropArea: 1
+        });
+      }
+    }
+
+    function aplicarCorte() {
+      if (!cropper) return alert("Nenhuma imagem carregada.");
+
+      cropper.getCroppedCanvas({
+        width: 856,
+        height: 540
+      }).toBlob(blob => {
+        const fileInput = document.getElementById('imagem');
+        const dataTransfer = new DataTransfer();
+        const arquivoCortado = new File([blob], "crop.png", { type: "image/png" });
+
+        dataTransfer.items.add(arquivoCortado);
+        fileInput.files = dataTransfer.files;
+
+        alert("Corte aplicado! Agora clique em 'Visualizar' ou 'Baixar'.");
+      }, 'image/png');
+    }
+  </script>
 </body>
 </html>
