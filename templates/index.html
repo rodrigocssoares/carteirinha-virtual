@@ -1,260 +1,87 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Carteirinha Virtual</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+{% extends 'base.html' %}
+{% block content %}
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom right, #fefcea, #d5fefd);
-      padding: 20px;
-    }
-    .container {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      flex-wrap: wrap;
-    }
-    .form-box, .preview-box {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 420px;
-    }
-    h1 {
-      text-align: center;
-      color: #004d40;
-    }
-    label {
-      font-weight: bold;
-    }
-    input[type="text"], input[type="color"], input[type="file"], input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button {
-      padding: 10px 16px;
-      margin-right: 10px;
+    input[readonly] {
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      color: white;
-      background-color: #00796b;
+      background: transparent;
+      font-weight: bold;
+      cursor: default;
+      outline: none;
     }
-    button:hover {
-      background-color: #004d40;
-    }
-    .image-preview {
-      max-width: 100%;
-      margin-top: 20px;
-    }
-    .erro {
-      color: red;
-      margin-bottom: 10px;
+    input[readonly]:focus {
+      outline: none;
+      box-shadow: none;
     }
   </style>
-</head>
-<body>
-  <h1>Gerador de Carteirinha Virtual</h1>
-  <form method="POST" enctype="multipart/form-data">
-    <div class="container">
-      <div class="form-box">
-        {% if erro %}
-          <div class="erro">{{ erro }}</div>
-        {% endif %}
-
-        <input type="hidden" id="id_atleta" name="id_atleta" value="{{ id_atleta or '' }}">
-        <div style="text-align: left; margin-bottom: 10px;">
-          <button type="button" onclick="abrirModal()">🔍 Consulta Atleta</button>
+  <div class="container mt-5">
+    <h1 class="mb-4">Gerador de Carteirinha Virtual</h1>
+    <form method="POST" enctype="multipart/form-data">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <button type="button" class="btn btn-success" onclick="consultarAtleta()">
+              <i class="fas fa-search"></i> Consulta Atleta
+            </button>
+          </div>
+          <div class="mb-3">
+            <label for="nome" class="form-label">Nome:</label>
+            <input type="text" id="nome" name="nome" value="{{ nome or '' }}" readonly style="width: 100%;">
+          </div>
+          <div class="mb-3">
+            <label for="categoria" class="form-label">Categoria:</label>
+            <input type="text" id="categoria" name="categoria" value="{{ categoria or '' }}" readonly style="width: 100%;">
+          </div>
+          <div class="mb-3">
+            <label for="estado" class="form-label">Estado:</label>
+            <input type="text" id="estado" name="estado" class="form-control" value="{{ estado or '' }}">
+          </div>
+          <div class="mb-3">
+            <label for="cidade" class="form-label">Cidade:</label>
+            <input type="text" id="cidade" name="cidade" class="form-control" value="{{ cidade or '' }}">
+          </div>
+          <div class="mb-3">
+            <label for="cor_texto" class="form-label">Cor do texto:</label>
+            <input type="color" id="cor_texto" name="cor_texto" class="form-control form-control-color" value="{{ cor_texto or '#000000' }}">
+          </div>
+          <div class="mb-3">
+            <label for="imagem" class="form-label">Imagem do cartão (proporção 856×540):</label>
+            <input type="file" id="imagem" name="imagem" class="form-control">
+          </div>
+          <div class="mb-3">
+            <button type="submit" name="acao" value="recortar" class="btn btn-primary">Aplicar Corte</button>
+            <button type="submit" name="acao" value="visualizar" class="btn btn-secondary">Visualizar</button>
+            <button type="submit" name="acao" value="baixar" class="btn btn-success">Baixar Carteirinha</button>
+          </div>
         </div>
-
-        <label for="nome">Nome:</label>
-        <input type="text" id="nome" name="nome" value="{{ nome or '' }}" readonly style="border: none; background: transparent; font-weight: bold; cursor: default;">
-
-        <label for="categoria">Categoria:</label>
-        <input type="text" id="categoria" name="categoria" value="{{ categoria or '' }}" readonly style="border: none; background: transparent; font-weight: bold; cursor: default;">
-
-        <label for="estado">Estado:</label>
-        <input type="text" id="estado" name="estado" value="{{ estado or '' }}">
-
-        <label for="cidade">Cidade:</label>
-        <input type="text" id="cidade" name="cidade" value="{{ cidade or '' }}">
-
-        <label for="cor">Cor do texto:</label>
-        <input type="color" id="cor" name="cor" value="{{ cor or '#FFFFFF' }}">
-
-        <label for="imagem">Imagem do cartão (proporção 856×540):</label>
-        <input type="file" id="imagem" name="imagem" accept="image/*" onchange="carregarImagem(event)">
-        <canvas id="canvasCorte" style="display: none; margin-top: 10px; max-width: 100%;"></canvas>
-        <div id="cropContainer" style="max-width: 100%; margin-top: 10px;">
-          <img id="imagemPreview" style="max-width: 100%; display: none;" />
+        <div class="col-md-6">
+          <h5>Carteirinha Gerada:</h5>
+          {% if imagem_carteirinha %}
+            <img src="data:image/png;base64,{{ imagem_carteirinha }}" alt="Carteirinha" class="img-fluid mt-3">
+          {% else %}
+            <p class="text-muted">Nenhuma carteirinha gerada ainda.</p>
+          {% endif %}
         </div>
-        <input type="hidden" id="imagem_cropada" name="imagem_cropada">
-        <button type="button" onclick="aplicarCorte()">Aplicar Corte</button>
-
-        {% if imagem_path %}
-          <input type="hidden" name="imagem_path" value="{{ imagem_path }}">
-        {% endif %}
-
-        <button type="submit" name="acao" value="visualizar">Visualizar</button>
-        <button type="submit" name="acao" value="baixar">Baixar Carteirinha</button>
       </div>
-
-      <div class="preview-box">
-        <h3>Carteirinha Gerada:</h3>
-        {% if imagem_gerada %}
-          <img src="{{ imagem_gerada }}" class="image-preview">
-        {% else %}
-          <p>Nenhuma carteirinha gerada ainda.</p>
-        {% endif %}
-      </div>
-    </div>
-  </form>
-
-  <!-- Modal -->
-  <div id="modalConsulta" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="fecharModal()">&times;</span>
-      <h2>Consulta de Atleta</h2>
-      <input type="text" id="buscaNome" onkeyup="filtrarNomes()" placeholder="Digite um nome...">
-      <ul id="listaNomes">
-        {% for _, row in atletas.iterrows() %}
-          <li onclick="selecionarID('{{ row['ID'] }}')" style="cursor: pointer;">
-            <strong>{{ row['ID'] }}</strong> - {{ row['Nome'] }}
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
+    </form>
   </div>
 
-  <style>
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 10000;
-      left: 0;
-      top: 0;
-      width: 100vw;
-      height: 100vh;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-    }
-    .modal-content {
-      background-color: #fff;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 90%;
-      max-width: 500px;
-      border-radius: 8px;
-    }
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .close:hover {
-      color: black;
-    }
-    #listaNomes {
-      list-style: none;
-      padding: 0;
-      max-height: 300px;
-      overflow-y: auto;
-      text-align: left;
-    }
-    #listaNomes li {
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-    }
-  </style>
-
   <script>
-    function abrirModal() {
-      document.getElementById('modalConsulta').style.display = 'block';
-    }
-    function fecharModal() {
-      document.getElementById('modalConsulta').style.display = 'none';
-    }
-    function selecionarID(id) {
-      document.getElementById('id_atleta').value = id;
-      fecharModal();
-      buscarAtletaPorID(id);
-    }
-    function buscarAtletaPorID(id) {
-      if (!id) return;
+    function consultarAtleta() {
+      const id = prompt("Digite o ID do atleta:");
+      if (id) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/';
 
-      fetch('/buscar_atleta', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `id_atleta=${id}`
-      })
-      .then(response => {
-        if (!response.ok) throw new Error('ID não encontrado');
-        return response.json();
-      })
-      .then(data => {
-        document.getElementById('nome').value = data.nome;
-        document.getElementById('categoria').value = data.categoria;
-      })
-      .catch(error => {
-        document.getElementById('nome').value = '';
-        document.getElementById('categoria').value = '';
-        alert(error.message);
-      });
-    }
-    function filtrarNomes() {
-      let filtro = document.getElementById('buscaNome').value.toLowerCase();
-      let itens = document.getElementById('listaNomes').getElementsByTagName('li');
-      for (let i = 0; i < itens.length; i++) {
-        let texto = itens[i].textContent || itens[i].innerText;
-        itens[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'id_atleta';
+        input.value = id;
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
       }
-    }
-
-    let cropper;
-    function carregarImagem(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const imgPreview = document.getElementById('imagemPreview');
-        imgPreview.src = URL.createObjectURL(file);
-        imgPreview.style.display = 'block';
-
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(imgPreview, {
-          aspectRatio: 856 / 540,
-          viewMode: 1,
-          autoCropArea: 1
-        });
-      }
-    }
-
-    function aplicarCorte() {
-      if (!cropper) return alert("Nenhuma imagem carregada.");
-
-      cropper.getCroppedCanvas({
-        width: 856,
-        height: 540
-      }).toBlob(blob => {
-        const fileInput = document.getElementById('imagem');
-        const dataTransfer = new DataTransfer();
-        const arquivoCortado = new File([blob], "crop.png", { type: "image/png" });
-
-        dataTransfer.items.add(arquivoCortado);
-        fileInput.files = dataTransfer.files;
-
-        alert("Corte aplicado! Agora clique em 'Visualizar' ou 'Baixar'.");
-      }, 'image/png');
     }
   </script>
-</body>
-</html>
+{% endblock %}
