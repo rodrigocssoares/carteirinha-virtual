@@ -17,7 +17,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
 def carregar_dados_atleta(id_atleta):
-    df = pd.read_csv(CSV_PATH)
+    # the CSV uses UTF-8 with BOM, so specify utf-8-sig to properly read headers
+    df = pd.read_csv(CSV_PATH, encoding="utf-8-sig")
     atleta = df[df['ID'] == int(id_atleta)]
     if not atleta.empty:
         return atleta.iloc[0]['Nome'], atleta.iloc[0]['Categoria']
@@ -52,7 +53,8 @@ def generate_card(img_path, nome, estado, cidade, categoria, cor_texto, result_f
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    df = pd.read_csv(CSV_PATH).sort_values(by="Nome")
+    # Ensure proper header parsing using utf-8-sig encoding
+    df = pd.read_csv(CSV_PATH, encoding="utf-8-sig").sort_values(by="Nome")
     imagem_gerada = None
     erro = ''
     nome = estado = cidade = categoria = cor = ''
